@@ -1,0 +1,94 @@
+---
+title: "hw4_jerome_wong"
+author: "Jerome Wong"
+date: "12/5/2021"
+output:
+  html_document:
+    toc: yes
+    number_sections: no
+  pdf_document:
+    toc: yes
+---
+
+
+```{r}
+knitr::opts_chunk$set(echo = TRUE)
+library(igraph) 
+library(sand) 
+library(blockmodels) 
+data(lazega)
+```
+
+Using the blockmodels package, ﬁt an SBM without covariates.
+
+```{r}
+lazega_out <- BM_bernoulli("SBM", as_adj(lazega, sparse=FALSE), verbosity=3, plotting= "")
+lazega_out$estimate()
+```
+
+• Report how many groups you found, plot the graph with nodes colored by cluster (and use set.seed as in lab), and provide a table of the estimated edge probabilities.
+
+5 groups were found
+
+```{r}
+set.seed(42)
+best_fit_membership_probs <- lazega_out$memberships[[which.max(lazega_out$ICL)]]$Z
+clust_assignments <- apply(best_fit_membership_probs, 1, which.max)
+hat_P_blockmodels = lazega_out$model_parameters[[which.max(lazega_out$ICL)]]$pi
+hat_P_blockmodels
+plot(lazega, vertex.color=clust_assignments, vertex.size = 10, vertex.label.cex= 0.45)
+```
+
+• In just 2-3 sentences, summarize the table: do the groups have roughly equal intragroup edge probabilities, or if not, how would you summarize what you see? Which intergroup edge probabilities are the largest or smallest, or are they all comparable?
+
+The intragroup edge probabilities are highest between group 3 and lowest between group 2. The highest intergroup edge probability is between group 2 and group 3.
+
+
+• Look at the node degree and node attributes by cluster. Do you notice diﬀerences between the clusters the model found? How would you characterize the clusters, or what underlying structure do you think the clusters might be picking up in terms of degree and/or speciﬁc node attributes?
+
+```{r}
+degree(lazega)[clust_assignments=="1"]
+degree(lazega)[clust_assignments=="2"]
+degree(lazega)[clust_assignments=="3"]
+```
+Cluster 2 has the lowest degrees whereas Cluster 3 has the highest degrees. Cluster 3 could be seen as the hubs of network and is picking up the people that are most connected. As we also saw in the previous question, it has the highest intergroup edge probability with cluster 2 as well.
+
+Now ﬁt the same model except include a single covariate: a matching eﬀect on one of the covariates, as in lab. For example, you might choose the indicator function for whether two lawyers practice the same type of law, in which case your model is
+
+\[\text{logit}\left(P(Y_{ij} \:|\: c_i, c_j, \text{Practice}_i, \text{Practice}_j)\right) = m_{c_i, c_j} + \beta\: \text{I}\{\text{Practice}_i = \text{Practice}_j\}\]
+
+```{r}
+n = vcount(lazega)
+practice = matrix(NA, nrow=n, ncol=n)
+for(i in 1:n){
+  for(j in 1:n){
+    practice[i, j] = (V(lazega)$Practice[i]==V(lazega)$Practice[j])
+  }
+}
+lazega_out <- BM_bernoulli_covariates("SBM", as_adj(lazega, sparse=FALSE), practice, verbosity=3, plotting="")
+lazega_out$estimate() 
+```
+
+• Report how many groups you found, plot the graph with nodes colored by cluster (and use set.seed as in lab), and provide a table of the estimated edge probabilities.
+
+5 groups were found
+
+```{r}
+best_fit_membership_probs <- lazega_out$memberships[[which.max(lazega_out$ICL)]]$Z
+clust_assignments_1 <- apply(best_fit_membership_probs, 1, which.max)
+set.seed(42)
+plot(lazega, vertex.color = clust_assignments_1, vertex.size = 10, vertex.label.cex= 0.45)
+
+mhat = lazega_out$model_parameters[[which.max(lazega_out$ICL)]]$m
+betahat = lazega_out$model_parameters[[which.max(lazega_out$ICL)]]$beta
+theta = rbind(cbind(mhat + as.numeric(betahat), mhat))
+hat_P_covar = exp(theta)/(1+exp(theta))
+hat_P_covar
+```
+
+• What do the results of the two models have in common, and in what ways do they diﬀer?
+```{r}
+cbind(V(lazega)$name, clust_assignments, clust_assignments_1)
+```
+
+Both models detected 5 groups and 3 clusters. In the model with the covariate, the edge probability of those in the same practice is higher than the ones that are not. Additionally, V13 is in cluster 2 and not in cluster 1 without the covariate.

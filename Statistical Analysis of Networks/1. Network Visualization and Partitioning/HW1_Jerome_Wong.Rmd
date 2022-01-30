@@ -1,0 +1,196 @@
+---
+title: "HW1_Jerome_Wong"
+output:
+  pdf_document:
+    toc: yes
+  html_document:
+    toc: yes
+    number_sections: no
+---
+
+```{r}
+library(sna)
+library(igraph)
+library(igraphdata)
+knitr::opts_chunk$set(echo = TRUE)
+data("UKfaculty")
+```
+
+```{r}
+pacakge_list <- c("igraph", "igraphdata")
+new_packages <- pacakge_list[!(pacakge_list %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+```
+
+1. Data description and visualization
+
+• In a sentence, what does this data set represent?
+```{r}
+?UKfaculty
+```
+It represents the personal friendship network of a faculty of a UK university.
+
+• What paper, book, or other resource is the source of this data set?
+It comes from: "Nepusz T., Petroczi A., Negyessy L., Bazso F.: Fuzzy communities and the concept of bridgeness in complex networks. Physical Review E 77:016107, 2008."
+
+• How many vertices and edges does the data set have?
+```{r}
+V(UKfaculty)
+E(UKfaculty)
+```
+There are 81 vertices and 817 edges
+
+
+• Is this graph directed or undirected? What other properties can you comment on?
+```{r}
+is_directed(UKfaculty)
+is_weighted(UKfaculty)
+is_simple(UKfaculty)
+is_connected(UKfaculty)
+```
+The UKfaculty graph is directed, weighted, simple and connected.
+
+• Describe each of the attributes included in this data set. What are they called, what format/type do they have, what are they attributes of (vertices, edges, etc), what do they mean?
+```{r}
+get_igraph_attrs <- function(igraph){
+  if(!is_igraph(igraph)) stop("Not a graph object")
+  list(graph_attrs = list.graph.attributes(igraph),
+       vertex_attrs = list.vertex.attributes(igraph),
+       edge_attrs = list.edge.attributes(igraph))
+}
+
+get_igraph_attrs(UKfaculty)
+typeof(V(UKfaculty)$Group)
+typeof(E(UKfaculty)$weight)
+```
+The vertex attribute "Graph" is in the datatype of "double"
+The edge attribute "weight" is in the datatype of "double 
+
+
+• Compute and comment on two diﬀerent centrality measures for this data set.
+```{r message=F,warning=FALSE}
+A <- get.adjacency(UKfaculty, sparse=FALSE)
+g <- as.network.matrix(A)
+gplot.target(g, sna::closeness(g),
+             main="closeness",
+             circ.lab = FALSE, circ.col="skyblue",
+             usearrows = FALSE,
+             vertex.col=c("blue", rep("red", 32), "yellow"),
+             edge.col="darkgray")
+gplot.target(g, sna::betweenness(g),
+             main="Betweenness",
+             circ.lab = FALSE, circ.col="skyblue",
+             usearrows = FALSE,
+             vertex.col=c("blue", rep("red", 32), "yellow"),
+             edge.col="darkgray")
+```
+Closeness Centrality is used to find individuals who are best placed to influence the network most quickly
+Betweeness Centrality is used to find individuals who influence flow around the network by acting as "bridges" between nodes
+
+
+• Compute and brieﬂy comment on some measure of assortativity for this data set.
+```{r}
+assortativity.nominal(UKfaculty, V(UKfaculty)$Group, directed=FALSE)
+assortativity.degree(UKfaculty)
+```
+A high and positive assortivity indicates that people in the different groups tend to associate more with people in the same faction
+A positive but low degree assortivity indicates that the tendency for nodes of high degree (resp. low degree) in the Ukfaculty to be connected to other high degree nodes is low.
+
+
+• Compute/explore at least one other aspect of the data (see labs for ideas) and comment on it.
+```{r}
+?clusters
+is_connected(UKfaculty)
+clusters(UKfaculty)
+```
+The network is connected. This implies that every member of the UKfaculty is reachable from the other. Therefore, it consists of only one component
+
+Plot the network. Try a few layouts, then choose one you think is informative or appropriate (there is no particular right answer), and comment on the graph structure.
+```{r}
+par(mfrow=c(2, 2))                          ## par(mfrow=c(2,2)) = 2 row, 2 columns
+par(oma=c(0,0,2,0))                         ## adjust outer margin for title
+
+## layout_with_fr
+plot.igraph(UKfaculty, layout = layout_with_fr(UKfaculty, maxiter = 5), main = 5)
+plot.igraph(UKfaculty, layout = layout_with_fr(UKfaculty, maxiter = 50), main = 50)
+plot.igraph(UKfaculty, layout = layout_with_fr(UKfaculty, maxiter = 500), main = 500)
+plot.igraph(UKfaculty, layout = layout_with_fr(UKfaculty, maxiter = 10000), main = 10000)
+title("No. of Iterations (layout_with_fr)", outer = TRUE)
+
+
+## layout_with_kk
+plot.igraph(UKfaculty, layout = layout_with_kk(UKfaculty, maxiter = 5), main = 5)
+plot.igraph(UKfaculty, layout = layout_with_kk(UKfaculty, maxiter = 50), main = 50)
+plot.igraph(UKfaculty, layout = layout_with_kk(UKfaculty, maxiter = 500), main = 500)
+plot.igraph(UKfaculty, layout = layout_with_kk(UKfaculty, maxiter = 10000), main = 10000)
+title("No. of Iterations (layout_with_kk)", outer = TRUE)
+
+
+## layout_with_graphopt
+plot.igraph(UKfaculty, layout = layout_with_graphopt(UKfaculty, niter = 5), main = 5)
+plot.igraph(UKfaculty, layout = layout_with_graphopt(UKfaculty, niter = 50), main = 50)
+plot.igraph(UKfaculty, layout = layout_with_graphopt(UKfaculty, niter = 500), main = 500)
+plot.igraph(UKfaculty, layout = layout_with_graphopt(UKfaculty, niter = 10000), main = 10000)
+title("No. of Iterations (layout_with_graphopt)", outer = TRUE)
+
+par(mfrow=c(1, 1))
+```
+layout_with_fr and layout_with_graphopt looks more promising than layout_with_kk. Let's compare those two:
+```{r}
+par(mfrow=c(1, 2))
+par(oma=c(0,0,2,0))
+
+plot.igraph(UKfaculty,
+            layout = layout_with_fr(UKfaculty, maxiter = 100000), 
+            main = "layout_with_fr",
+            sub = "100000 iterations")
+
+plot.igraph(UKfaculty, 
+            layout = layout_with_graphopt(UKfaculty, niter = 100000), 
+            main = "layout_with_graphopt",
+            sub = "100000 iterations")
+
+par(mfrow=c(1, 1))
+```
+Looks like layout_with_fr have a more defined clustering than layout_with_graphopt. 
+
+```{r}
+coords <- layout_with_fr(UKfaculty, maxiter = 100000)
+par(mfrow=c(1, 2))
+par(oma=c(0,0,2,0))
+
+plot.igraph(UKfaculty, layout = coords, main = "layout = coords #1")
+
+plot.igraph(UKfaculty, layout = coords, main = "layout = coords #2")
+
+title("Using the Same Layout Across Multiple Graphs", outer = TRUE)
+
+par(mfrow=c(1, 1))
+
+plot.igraph(UKfaculty, layout = coords, main = "layout = coords (Single Plot)")
+
+```
+```{r}
+plot.igraph(UKfaculty, layout = coords, asp = 0, main = "asp = 0")
+```
+The graph has 3 distrinct clusters with node 11 being an outlier.
+
+
+2. Graph partitioning
+
+Pick two graph partitioning methods (including at least one spectral method), state which two methods you chose, and apply them to this data set. Do the results look similar? Would you draw diﬀerent conclusions from one partitioning versus the other? Bonus: why might you prefer one over the other?
+
+```{r}
+res.UKfaculty = leading.eigenvector.community(UKfaculty)
+length(res.UKfaculty)
+modularity(res.UKfaculty)
+membership(res.UKfaculty)
+plot(res.UKfaculty, UKfaculty)
+```
+```{r}
+ceb <- cluster_edge_betweenness(UKfaculty) 
+
+dendPlot(ceb, mode="hclust")
+plot(ceb, UKfaculty) 
+```
+I used the spectral method and the Girvan–Newman algorithm. The spectral method gives a more defined clustering compared to Girvan-Newman and would be the better choice amongst the two. According to the spectral method, there exist 5 main clusters whereas in Girvan-Newman, there has singular clusters that exist only 1 node.

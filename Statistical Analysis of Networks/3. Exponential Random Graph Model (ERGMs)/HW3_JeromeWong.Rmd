@@ -1,0 +1,59 @@
+---
+title: "CSSS567 Homework 3 by Jerome Wong"
+author: "Jerome Wong"
+date: "11/13/2021"
+output:
+  html_document:
+    toc: yes
+    number_sections: no
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ergm)
+library(knitr)
+set.seed(42)
+data("faux.mesa.high")
+mesa <- faux.mesa.high
+```
+
+* In just 2-3 sentences, describe this network and this data set
+```{r, echo=FALSE}
+??mesa
+```
+This dataset represents a simulated in-school friendship network. It contains 205 vertices and 203 undirected eges. It has 3 vertex attributes - Grades, Sex and Race.
+
+
+* Propose an exponential random graph model (ERGM) with at least three features (geometric statistics and/or nodal covariates) that you think might make sense for this data set. Describe in words what is in the model and why you are choosing to include these variables. Include the equation for the model you are proposing. (You can draw from the lab for examples of how to format these equations.) This can be a simple model as long as it seems generally plausible and uses the appropriate functions to represent the eﬀects you want to include.
+
+\[P_{\theta, \mathscr{Y} }(Y=y) = \frac{exp\{\theta^Tg(X,y)\}}{\kappa(\theta, \mathscr{Y})} , y \in \mathscr{Y}\]
+
+where g(X, y) includes the 3 features:  number of edges in the mesa dataset, number of edges between students of the same grades, counted separately for each possible grade and the number of edges involving  males, with male-male edges counted twice.
+
+The model contain terms for the overall number of edges, a differential homophily effect for grade, and a main effect for sex. Including these variables would allow me to investigate the relationship between making friends between and within grades as well as making friends as a guy vs a girl.
+
+* Fit the model and report the estimates you obtained in a simple table. (Don’t just print the raw output from summary().)
+
+```{r, message=FALSE}
+model <- ergm(mesa ~ edges +
+                nodematch("Grade", diff=TRUE) + 
+                nodefactor("Sex"))
+estimates <- rbind(summary(model)$coefficients[1:8])
+colnames(estimates) <- c("Edges", "Grade 7", "Grade 8",
+                                "Grade 9", "Grade 10", "Grade 11",
+                                "Grade 12", "Sex")
+rownames(estimates) <- c("Estimates")
+kable(estimates, caption="Estimates of Edges, Grades and Sex in Mesa High")
+```
+
+
+* Brieﬂy interpret your results as we discussed in lab. 
+
+In each grade, students are more likely to make friends with those in their own grade than those in the other grades. Additionally, girls are more likely than boys to make friends in this network. For instance, an individual female's odds of forming a tie with a particular student are exp{0.3743}=1.454 times those of an individual male, conditional on the rest of the network.
+
+* Brieﬂy conclude—what if anything did you learn, and what would you consider trying next?
+
+ERGM is able to be used to quantify the strength of intra-group effects. Would consider looking at the Race vertex attribute in the ergm model.
+
