@@ -47,9 +47,11 @@ Done in collaboration with [Aparna Seth](https://www.linkedin.com/in/aparna-seth
 
 • Degree correlation is -0.28; the network shows weak disassortativity
 
-![degree_distribution](https://github.com/DarkArcZ/data-analysis/blob/67c37cd60b296912758ff12ee5fd94017e3d90bd/Projects/Atlanta%20Urban%20HIV%20Tranmission%20Study/degree_distribution.png
+![degree_distribution](https://github.com/DarkArcZ/data-analysis/blob/67c37cd60b296912758ff12ee5fd94017e3d90bd/Projects/Atlanta%20Urban%20HIV%20Tranmission%20Study/degree_distribution.png)
 
 #### Table 2: Network Data Description Statistics
+Descriptive Statistics | Values|
+|---|---|
 | Nodes | 228 |
 | Edges | 678 |
 |Degree - Mean (Range) | 5.95(1-38) |
