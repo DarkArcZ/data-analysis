@@ -9,6 +9,9 @@ This repo contains various projects that involve data analysis and modeling.
    - Linear Regression
      - Code to train linear regression model based on survey data collected
      - Analysis of model based on signifiance value and diagnostic plots
+   - Logistic Regression
+     - Code for logistic regression models including interaction term
+     - Analysis and intrepretation of results, model fit and visualization
 
 2. Projects
    - Atlanta Urban Networks HIV Transmission Study 
